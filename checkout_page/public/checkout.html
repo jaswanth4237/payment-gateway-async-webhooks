@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout | Antigravity Pay</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h2 { margin-bottom: 20px; font-weight: 700; text-align: center; color: #0f172a; }
+        .method-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .method { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; font-weight: 600; }
+        .method.active { border-color: #6366f1; background: #f5f3ff; color: #4338ca; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #4f46e5; }
+        .loading { display: none; text-align: center; font-weight: 600; color: #6366f1; padding: 20px; }
+        #status { margin-top: 15px; text-align: center; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Antigravity Pay</h2>
+        <div id="payment-form">
+            <div class="method-selector">
+                <div class="method active" id="upi-tab" onclick="setMethod('upi')">UPI</div>
+                <div class="method" id="card-tab" onclick="setMethod('card')">Card</div>
+            </div>
+
+            <div id="upi-fields">
+                <input type="text" id="vpa" placeholder="vpa@upi" value="user@paytm">
+            </div>
+
+            <div id="card-fields" style="display: none;">
+                <input type="text" id="card_number" placeholder="Card Number (4242...)">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="expiry" placeholder="MM/YY">
+                    <input type="text" id="cvv" placeholder="CVV">
+                </div>
+            </div>
+
+            <button onclick="pay()">Pay Now</button>
+        </div>
+
+        <div id="loader" class="loading">Processing Payment...</div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let selectedMethod = 'upi';
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order_id');
+
+        function setMethod(method) {
+            selectedMethod = method;
+            document.getElementById('upi-tab').classList.toggle('active', method === 'upi');
+            document.getElementById('card-tab').classList.toggle('active', method === 'card');
+            document.getElementById('upi-fields').style.display = method === 'upi' ? 'block' : 'none';
+            document.getElementById('card-fields').style.display = method === 'card' ? 'block' : 'none';
+        }
+
+        async function pay() {
+            const form = document.getElementById('payment-form');
+            const loader = document.getElementById('loader');
+            const statusDiv = document.getElementById('status');
+            
+            form.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                // In a real app, you'd fetch the public key and other details.
+                // Here we assume standard test credentials for simulation.
+                const response = await fetch('http://localhost:8000/api/v1/payments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Api-Key': 'key_test_abc123',
+                        'X-Api-Secret': 'secret_test_xyz789'
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId,
+                        amount: 50000, // Hardcoded for demo
+                        method: selectedMethod,
+                        vpa: document.getElementById('vpa').value
+                    })
+                });
+
+                const payment = await response.json();
+                
+                if (response.ok) {
+                    // Start polling for status
+                    pollStatus(payment.id);
+                } else {
+                    statusDiv.innerText = 'Error: ' + (payment.error?.description || 'Failed');
+                    form.style.display = 'block';
+                    loader.style.display = 'none';
+                }
+            } catch (err) {
+                statusDiv.innerText = 'Network Error';
+                form.style.display = 'block';
+                loader.style.display = 'none';
+            }
+        }
+
+        async function pollStatus(paymentId) {
+            const timer = setInterval(async () => {
+                const res = await fetch(`http://localhost:8000/api/v1/test/jobs/status`); // Using a shortcut since we don't have a GET /payments without long auth chains readily demoed
+                // Actually let's use a specific endpoint if we had one. 
+                // Let's just poll the payment endpoint if we implement it.
+                // For this demo, let's assume it succeeds after 10s simulation.
+                
+                const pollRes = await fetch(`http://localhost:8000/api/v1/payments/${paymentId}`, {
+                    headers: {
+                        'X-Api-Key': 'key_test_abc123',
+                        'X-Api-Secret': 'secret_test_xyz789'
+                    }
+                });
+                const data = await pollRes.json();
+                
+                if (data.status !== 'pending') {
+                    clearInterval(timer);
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('status').innerText = data.status === 'success' ? 'Payment Successful!' : 'Payment Failed';
+                    
+                    // Notify parent
+                    window.parent.postMessage({
+                        type: data.status === 'success' ? 'payment_success' : 'payment_failed',
+                        data: { paymentId: data.id }
+                    }, '*');
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

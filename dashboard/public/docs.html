@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>API Documentation | Antigravity Dashboard</title>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: #1e293b;
+            padding: 30px 20px;
+            box-sizing: border-box;
+        }
+
+        .sidebar h1 {
+            font-size: 20px;
+            color: #6366f1;
+            margin-bottom: 40px;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 12px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar nav a.active {
+            background: #334155;
+            color: white;
+        }
+
+        .main {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #334155;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 32px;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        h3 {
+            color: #6366f1;
+            margin-top: 40px;
+        }
+
+        pre {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            overflow-x: auto;
+            color: #94a3b8;
+            font-family: 'Fira Code', monospace;
+        }
+
+        code {
+            color: #f87171;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar">
+        <h1>Antigravity Pay</h1>
+        <nav>
+            <a href="/dashboard/docs" class="active">Documentation</a>
+            <a href="/dashboard/webhooks">Webhooks</a>
+        </nav>
+    </div>
+    <div class="main">
+        <div data-test-id="api-docs">
+            <h2>Integration Guide</h2>
+
+            <section data-test-id="section-create-order">
+                <h3>1. Create Order</h3>
+                <p>Use our REST API to create an order from your backend.</p>
+                <pre data-test-id="code-snippet-create-order">
+<code>curl -X POST http://localhost:8000/api/v1/payments \
+  -H "X-Api-Key: key_test_abc123" \
+  -H "X-Api-Secret: secret_test_xyz789" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "order_id": "order_123",
+    "amount": 50000,
+    "currency": "INR",
+    "method": "upi",
+    "vpa": "user@paytm"
+  }'</code>
+                </pre>
+            </section>
+
+            <section data-test-id="section-sdk-integration">
+                <h3>2. SDK Integration</h3>
+                <p>Include our script on your checkout page to enable the payment modal.</p>
+                <pre data-test-id="code-snippet-sdk">
+<code>&lt;script src="http://localhost:3001/checkout.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  const checkout = new PaymentGateway({
+    key: 'key_test_abc123',
+    orderId: 'order_xyz',
+    onSuccess: (response) => {
+      console.log('Payment ID:', response.paymentId);
+    }
+  });
+  checkout.open();
+&lt;/script&gt;</code>
+                </pre>
+            </section>
+
+            <section data-test-id="section-webhook-verification">
+                <h3>3. Verify Webhook Signature</h3>
+                <p>Secure your endpoint by verifying the HMAC signature.</p>
+                <pre data-test-id="code-snippet-webhook">
+<code>const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(payload))
+    .digest('hex');
+  
+  return signature === expectedSignature;
+}</code>
+                </pre>
+            </section>
+        </div>
+    </div>
+</body>
+
+</html>
