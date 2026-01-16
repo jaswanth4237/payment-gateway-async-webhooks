@@ -10,6 +10,12 @@ app.get('/checkout', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/checkout.html'));
 });
 
+// Serve the SDK
+app.get('/checkout.js', (req, res) => {
+    res.type('application/javascript');
+    res.sendFile(path.join(__dirname, 'public/checkout.js'));
+});
+
 const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Checkout service running on port ${PORT}`);
