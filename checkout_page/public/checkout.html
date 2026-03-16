@@ -1,26 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Checkout | Antigravity Pay</title>
+    <title>Secure Checkout | Payment Gateway</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
-        .container { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        h2 { margin-bottom: 20px; font-weight: 700; text-align: center; color: #0f172a; }
-        .method-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .method { flex: 1; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; cursor: pointer; font-weight: 600; }
-        .method.active { border-color: #6366f1; background: #f5f3ff; color: #4338ca; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-        button:hover { background: #4f46e5; }
-        .loading { display: none; text-align: center; font-weight: 600; color: #6366f1; padding: 20px; }
-        #status { margin-top: 15px; text-align: center; font-weight: 600; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-align: center;
+            color: #0f172a;
+        }
+
+        .method-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .method {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .method.active {
+            border-color: #6366f1;
+            background: #f5f3ff;
+            color: #4338ca;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #4f46e5;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            font-weight: 600;
+            color: #6366f1;
+            padding: 20px;
+        }
+
+        #status {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h2>Antigravity Pay</h2>
+        <h2>Payment Gateway</h2>
         <div id="payment-form">
             <div class="method-selector">
                 <div class="method active" id="upi-tab" onclick="setMethod('upi')">UPI</div>
@@ -63,7 +138,7 @@
             const form = document.getElementById('payment-form');
             const loader = document.getElementById('loader');
             const statusDiv = document.getElementById('status');
-            
+
             form.style.display = 'none';
             loader.style.display = 'block';
 
@@ -86,7 +161,7 @@
                 });
 
                 const payment = await response.json();
-                
+
                 if (response.ok) {
                     // Start polling for status
                     pollStatus(payment.id);
@@ -108,7 +183,7 @@
                 // Actually let's use a specific endpoint if we had one. 
                 // Let's just poll the payment endpoint if we implement it.
                 // For this demo, let's assume it succeeds after 10s simulation.
-                
+
                 const pollRes = await fetch(`http://localhost:8000/api/v1/payments/${paymentId}`, {
                     headers: {
                         'X-Api-Key': 'key_test_abc123',
@@ -116,12 +191,12 @@
                     }
                 });
                 const data = await pollRes.json();
-                
+
                 if (data.status !== 'pending') {
                     clearInterval(timer);
                     document.getElementById('loader').style.display = 'none';
                     document.getElementById('status').innerText = data.status === 'success' ? 'Payment Successful!' : 'Payment Failed';
-                    
+
                     // Notify parent
                     window.parent.postMessage({
                         type: data.status === 'success' ? 'payment_success' : 'payment_failed',
@@ -132,4 +207,5 @@
         }
     </script>
 </body>
+
 </html>
